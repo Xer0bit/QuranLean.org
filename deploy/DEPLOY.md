@@ -144,7 +144,12 @@ auto-deploys via [`.github/workflows/deploy-api.yml`](../.github/workflows/deplo
 it SSHes in, pulls `main`, reinstalls deps, restarts the service, and smoke-tests
 `/health`. (The frontend deploys independently via Vercel on push.)
 
-**Add these repository secrets** (GitHub → Settings → Secrets and variables → Actions):
+These secrets live under a GitHub **Environment named `Production`** (Settings →
+Environments → Production → Environment secrets). The workflow declares
+`environment: Production` so the deploy job can read them — if you move them to
+repository-level secrets instead, remove that line from the workflow.
+
+**Required secrets:**
 
 | Secret | Value |
 |---|---|

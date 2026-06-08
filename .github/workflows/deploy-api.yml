@@ -28,6 +28,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Secrets are stored under the "Production" environment, so the job must
+    # declare it to gain access to SERVER_HOST / SERVER_USER / SSH_PRIVATE_KEY.
+    environment: Production
     steps:
       - name: Configure SSH
         env:
