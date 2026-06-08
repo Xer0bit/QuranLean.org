@@ -1,0 +1,40 @@
+# ---- Frontend (Node / Vite) ----
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# ---- Backend (Python) ----
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# ---- Environment & secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Database ----
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+
+# ---- Test artifacts ----
+test_typing.cjs
+test_typing.js
+
+# ---- Misc ----
+ignored

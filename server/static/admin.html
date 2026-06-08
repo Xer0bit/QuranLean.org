@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tarteel Type — Admin</title>
+<style>
+:root {
+  --bg: #0f0f0f; --surface: #1a1a1a; --border: #2a2a2a;
+  --text: #e8e8e8; --muted: #6b6b6b; --accent: #c9a96e;
+  --correct: #4ade80; --incorrect: #f87171;
+  --font: 'Inter', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font);
+  font-size: 14px; line-height: 1.5; }
+a { color: var(--accent); text-decoration: none; }
+
+/* layout */
+.shell { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+}
+.brand {
+  padding: 20px 18px 16px;
+  font-size: 18px; font-weight: 700; border-bottom: 1px solid var(--border);
+}
+.brand span { color: var(--accent); }
+.nav { flex: 1; padding: 10px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer; border-radius: 0;
+  color: var(--muted); transition: color .15s, background .15s;
+  font-size: 13.5px;
+}
+.nav-item:hover { background: var(--border); color: var(--text); }
+.nav-item.active { color: var(--accent); background: rgba(201,169,110,.08); }
+.nav-item svg { flex-shrink: 0; }
+.sidebar-foot {
+  padding: 14px 18px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted);
+}
+.main { flex: 1; overflow: auto; }
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+}
+.topbar h1 { font-size: 18px; font-weight: 600; }
+.content { padding: 24px; }
+
+/* login screen */
+.login-wrap {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+}
+.login-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 36px 32px; width: 360px; text-align: center;
+}
+.login-card h2 { font-size: 22px; margin-bottom: 6px; }
+.login-card p { color: var(--muted); margin-bottom: 24px; font-size: 13px; }
+
+/* cards / stats */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 20px; text-align: center;
+}
+.stat-card .val { font-size: 32px; font-weight: 700; color: var(--accent); }
+.stat-card .lbl { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; }
+
+/* table */
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; margin-bottom: 24px;
+}
+.table-head { padding: 14px 18px; border-bottom: 1px solid var(--border);
+  font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: space-between; }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--bg); padding: 10px 14px; text-align: left;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.025); }
+
+/* badges */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500;
+}
+.badge-green { background: rgba(74,222,128,.12); color: var(--correct); }
+.badge-red { background: rgba(248,113,113,.12); color: var(--incorrect); }
+.badge-gold { background: rgba(201,169,110,.12); color: var(--accent); }
+.badge-muted { background: var(--border); color: var(--muted); }
+
+/* forms / inputs */
+input, select {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; width: 100%;
+  font-family: var(--font);
+}
+input:focus, select:focus { border-color: var(--accent); }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.form-group { margin-bottom: 14px; }
+.err-msg { color: var(--incorrect); font-size: 12px; margin-top: 8px; }
+
+/* buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 18px; border-radius: 9px; border: 1px solid transparent;
+  font-size: 13px; font-weight: 500; cursor: pointer; font-family: var(--font);
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--accent); color: #0f0f0f; }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text); }
+.btn-danger { background: var(--incorrect); color: #0f0f0f; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-full { width: 100%; }
+
+/* pagination */
+.pagination { display: flex; gap: 8px; align-items: center; padding: 12px 14px; }
+.page-btn { padding: 5px 11px; border: 1px solid var(--border); border-radius: 6px;
+  background: transparent; color: var(--text); cursor: pointer; font-size: 12px;
+  font-family: var(--font); }
+.page-btn:disabled { opacity: .3; cursor: default; }
+.page-info { font-size: 12px; color: var(--muted); }
+
+/* misc */
+.loading { color: var(--muted); padding: 40px; text-align: center; }
+.section-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.top-surahs { display: flex; flex-direction: column; gap: 8px; }
+.surah-bar { display: flex; align-items: center; gap: 10px; }
+.surah-bar-name { width: 140px; font-size: 12px; color: var(--muted); }
+.surah-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.surah-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s; }
+.surah-bar-count { font-size: 12px; color: var(--muted); width: 40px; text-align: right; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--border);
+  display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.actions { display: flex; gap: 6px; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const API = '';  // same origin
+
+// ── state ──────────────────────────────────────────────────────────────────
+let token = localStorage.getItem('admin_token') || '';
+let currentPage = 'dashboard';
+let usersPage = 1;
+let sessionsPage = 1;
+
+// ── API helpers ────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    ...opts,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res.json();
+}
+
+// ── render helpers ─────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const app = () => document.getElementById('app');
+
+function render(html) { app().innerHTML = html; }
+
+function navItem(page, icon, label) {
+  return `<div class="nav-item ${currentPage === page ? 'active' : ''}" onclick="goto('${page}')">
+    ${icon}<span>${label}</span>
+  </div>`;
+}
+
+const icons = {
+  dashboard: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+  users: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  sessions: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+  logout: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+};
+
+function shell(title, bodyHtml) {
+  return `
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">Tarteel<span>.</span>Admin</div>
+      <nav class="nav">
+        ${navItem('dashboard', icons.dashboard, 'Dashboard')}
+        ${navItem('users', icons.users, 'Users')}
+        ${navItem('sessions', icons.sessions, 'Sessions')}
+      </nav>
+      <div class="sidebar-foot">
+        <div style="cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--muted)" onclick="logout()">
+          ${icons.logout} Sign out
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><h1>${title}</h1></div>
+      <div class="content">${bodyHtml}</div>
+    </div>
+  </div>`;
+}
+
+// ── login page ─────────────────────────────────────────────────────────────
+function showLogin(errMsg = '') {
+  render(`
+  <div class="login-wrap">
+    <div class="login-card">
+      <h2>Tarteel<span style="color:var(--accent)">.</span>Admin</h2>
+      <p>Sign in with your admin account</p>
+      ${errMsg ? `<div class="err-msg" style="margin-bottom:12px">${errMsg}</div>` : ''}
+      <div class="form-group"><label>Email</label><input type="email" id="l-email" placeholder="admin@example.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••"/></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in</button>
+      <div id="l-err" class="err-msg"></div>
+    </div>
+  </div>`);
+  $('l-email').addEventListener('keydown', e => e.key === 'Enter' && doLogin());
+  $('l-pass').addEventListener('keydown', e => e.key === 'Enter' && doLogin());
+}
+
+async function doLogin() {
+  const email = $('l-email').value.trim();
+  const pass = $('l-pass').value;
+  try {
+    const data = await api('/auth/login', {
+      method: 'POST', body: JSON.stringify({ email, password: pass })
+    });
+    if (!data.user.is_admin) { $('l-err').textContent = 'Not an admin account'; return; }
+    token = data.token;
+    localStorage.setItem('admin_token', token);
+    goto('dashboard');
+  } catch (e) { $('l-err').textContent = e.message; }
+}
+
+function logout() {
+  token = '';
+  localStorage.removeItem('admin_token');
+  showLogin();
+}
+
+// ── dashboard ──────────────────────────────────────────────────────────────
+async function showDashboard() {
+  render(shell('Dashboard', '<div class="loading">Loading…</div>'));
+  try {
+    const s = await api('/admin/stats');
+    const topMax = s.top_surahs[0]?.count || 1;
+    const inner = `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="val">${s.total_users}</div><div class="lbl">Total Users</div></div>
+      <div class="stat-card"><div class="val">${s.total_sessions}</div><div class="lbl">Typing Sessions</div></div>
+      <div class="stat-card"><div class="val">${s.avg_wpm}</div><div class="lbl">Avg WPM</div></div>
+      <div class="stat-card"><div class="val">${s.avg_accuracy}%</div><div class="lbl">Avg Accuracy</div></div>
+    </div>
+    <div class="table-wrap" style="padding:20px">
+      <div class="section-title">Most Practiced Surahs</div>
+      <div class="top-surahs">
+        ${s.top_surahs.map(r => `
+          <div class="surah-bar">
+            <div class="surah-bar-name">${r.name}</div>
+            <div class="surah-bar-track"><div class="surah-bar-fill" style="width:${Math.round(r.count/topMax*100)}%"></div></div>
+            <div class="surah-bar-count">${r.count}</div>
+          </div>`).join('') || '<div style="color:var(--muted);font-size:13px">No data yet</div>'}
+      </div>
+    </div>`;
+    render(shell('Dashboard', inner));
+  } catch (e) { render(shell('Dashboard', `<div class="loading" style="color:var(--incorrect)">${e.message}</div>`)); }
+}
+
+// ── users ──────────────────────────────────────────────────────────────────
+async function showUsers() {
+  render(shell('Users', '<div class="loading">Loading…</div>'));
+  try {
+    const d = await api(`/admin/users?page=${usersPage}&per_page=20`);
+    const rows = d.users.map(u => `
+      <tr>
+        <td><div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar">${u.name.charAt(0).toUpperCase()}</div>
+          <div><div style="font-weight:500">${esc(u.name)}</div><div style="color:var(--muted);font-size:12px">${esc(u.email)}</div></div>
+        </div></td>
+        <td>${u.google ? '<span class="badge badge-muted">Google</span>' : '<span class="badge badge-muted">Email</span>'}</td>
+        <td>${u.is_admin ? '<span class="badge badge-gold">Admin</span>' : ''}</td>
+        <td>${u.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Disabled</span>'}</td>
+        <td>${u.sessions}</td>
+        <td style="color:var(--muted)">${fmtDate(u.created_at)}</td>
+        <td>
+          <div class="actions">
+            ${u.is_admin
+              ? `<button class="btn btn-ghost btn-sm" onclick="patchUser(${u.id},{is_admin:false})">Revoke Admin</button>`
+              : `<button class="btn btn-ghost btn-sm" onclick="patchUser(${u.id},{is_admin:true})">Make Admin</button>`}
+            ${u.is_active
+              ? `<button class="btn btn-ghost btn-sm" onclick="patchUser(${u.id},{is_active:false})">Disable</button>`
+              : `<button class="btn btn-ghost btn-sm" onclick="patchUser(${u.id},{is_active:true})">Enable</button>`}
+            <button class="btn btn-danger btn-sm" onclick="delUser(${u.id},'${esc(u.name)}')">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('');
+
+    const totalPages = Math.ceil(d.total / d.per_page);
+    const inner = `
+    <div class="table-wrap">
+      <div class="table-head"><span>${d.total} users</span></div>
+      <table>
+        <thead><tr>
+          <th>User</th><th>Auth</th><th>Role</th><th>Status</th><th>Sessions</th><th>Joined</th><th>Actions</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No users</td></tr>'}</tbody>
+      </table>
+      <div class="pagination">
+        <button class="page-btn" onclick="usersPage--;showUsers()" ${usersPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${usersPage} / ${totalPages}</span>
+        <button class="page-btn" onclick="usersPage++;showUsers()" ${usersPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    </div>`;
+    render(shell('Users', inner));
+  } catch (e) { render(shell('Users', `<div class="loading" style="color:var(--incorrect)">${e.message}</div>`)); }
+}
+
+async function patchUser(id, patch) {
+  try {
+    await api(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    showUsers();
+  } catch (e) { alert(e.message); }
+}
+
+async function delUser(id, name) {
+  if (!confirm(`Delete user "${name}"? This is permanent.`)) return;
+  try {
+    await api(`/admin/users/${id}`, { method: 'DELETE' });
+    showUsers();
+  } catch (e) { alert(e.message); }
+}
+
+// ── sessions ───────────────────────────────────────────────────────────────
+async function showSessions() {
+  render(shell('Sessions', '<div class="loading">Loading…</div>'));
+  try {
+    const d = await api(`/admin/sessions?page=${sessionsPage}&per_page=30`);
+    const rows = d.sessions.map(s => `
+      <tr>
+        <td style="color:var(--muted)">${s.id}</td>
+        <td>${esc(s.surah_name)}</td>
+        <td><span class="badge badge-muted">${s.ayah_key}</span></td>
+        <td style="color:var(--accent);font-weight:600">${s.wpm}</td>
+        <td>${s.accuracy}%</td>
+        <td style="color:var(--muted)">${fmtDate(s.completed_at)}</td>
+      </tr>`).join('');
+
+    const totalPages = Math.ceil(d.total / 30);
+    const inner = `
+    <div class="table-wrap">
+      <div class="table-head"><span>${d.total} total sessions</span></div>
+      <table>
+        <thead><tr><th>ID</th><th>Surah</th><th>Ayah</th><th>WPM</th><th>Accuracy</th><th>Date</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No sessions</td></tr>'}</tbody>
+      </table>
+      <div class="pagination">
+        <button class="page-btn" onclick="sessionsPage--;showSessions()" ${sessionsPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${sessionsPage} / ${totalPages}</span>
+        <button class="page-btn" onclick="sessionsPage++;showSessions()" ${sessionsPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    </div>`;
+    render(shell('Sessions', inner));
+  } catch (e) { render(shell('Sessions', `<div class="loading" style="color:var(--incorrect)">${e.message}</div>`)); }
+}
+
+// ── router ─────────────────────────────────────────────────────────────────
+function goto(page) {
+  currentPage = page;
+  if (!token) { showLogin(); return; }
+  if (page === 'dashboard') showDashboard();
+  else if (page === 'users') showUsers();
+  else if (page === 'sessions') showSessions();
+}
+
+// ── utils ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── init ───────────────────────────────────────────────────────────────────
+goto(token ? 'dashboard' : 'login');
+</script>
+</body>
+</html>
