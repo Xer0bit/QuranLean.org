@@ -47,14 +47,10 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 
 ```bash
 pip install -r requirements.txt
-pip install "bcrypt==4.0.1"
 ```
 
-> **Why pin bcrypt?** `passlib` (used for password hashing) doesn't yet support
-> bcrypt 5.x — its backend detection throws on startup. `bcrypt==4.0.1` is the
-> last fully compatible release. If you ever see a `password cannot be longer
-> than 72 bytes` or `module 'bcrypt' has no attribute '__about__'` error, this
-> is the fix.
+> Password hashing uses the `bcrypt` library directly (see `auth.py`) — no
+> passlib, so any modern bcrypt (4.x or 5.x) works, including on Python 3.13/3.14.
 
 ### 2.3 Configure environment
 
@@ -193,7 +189,7 @@ Set on the server:
 
 | Symptom | Fix |
 |---|---|
-| Backend crashes on start with a `bcrypt` error | `pip install "bcrypt==4.0.1"` (section 2.2) |
+| Backend crashes on start with a `bcrypt` error | Ensure `bcrypt` is installed (`pip install -r requirements.txt`); auth uses it directly, no passlib |
 | `401 / Not authenticated` everywhere | Expected when logged out; sign in or it's a missing/expired token |
 | Frontend loads but no surahs | Backend down, or no internet (Quran data is fetched live from QuranCDN) |
 | Tafseer/translation empty | QuranCDN API hiccup — refresh; data is cached per surah after first load |

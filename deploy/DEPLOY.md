@@ -72,7 +72,6 @@ git clone https://github.com/Xer0bit/LeanQuran.org.git ~/LeanQuran.org
 cd ~/LeanQuran.org/server
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
-./venv/bin/pip install "bcrypt==4.0.1"
 ```
 
 ### 3. Backend env
@@ -192,5 +191,5 @@ SERVER_HOST=<server-public-ip> ./deploy/deploy.sh
 | Frontend calls go to quranlearn.org and 404 | `VITE_API_URL` not baked in — confirm `.env.production` committed, rebuild |
 | CORS error in console | Set `FRONTEND_URL=https://quranlearn.org` in server `.env`, restart service |
 | Google login redirects to `http://` / fails | Service must run with `--proxy-headers` (it does in the unit); add the prod redirect URI in Google Console |
-| `bcrypt` error on start | `./venv/bin/pip install "bcrypt==4.0.1"` |
+| `bcrypt` error on start | Reinstall deps: `./venv/bin/pip install -r requirements.txt` (auth uses bcrypt directly, no passlib) |
 | 502 from nginx | uvicorn not running — `sudo systemctl status quranlearn-api`, `journalctl -u quranlearn-api -f` |

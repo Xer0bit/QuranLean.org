@@ -87,7 +87,6 @@ jobs:
           [ -d venv ] || python3 -m venv venv
           ./venv/bin/pip install --upgrade pip --quiet
           ./venv/bin/pip install -r requirements.txt --quiet
-          ./venv/bin/pip install "bcrypt==4.0.1" --quiet
 
           # 3. Warn if env is missing (never overwrite it from CI)
           [ -f .env ] || echo "::warning:: server/.env missing — create it from .env.example (see deploy/DEPLOY.md)"

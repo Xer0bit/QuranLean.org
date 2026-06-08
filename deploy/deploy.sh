@@ -38,7 +38,6 @@ cd "${REMOTE_DIR}/server"
 [ -d venv ] || python3 -m venv venv
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install -r requirements.txt
-./venv/bin/pip install "bcrypt==4.0.1"
 
 # 3. Ensure .env exists (do NOT overwrite an existing one)
 if [ ! -f .env ]; then

@@ -37,7 +37,7 @@ with Ibn Kathir's tafseer one hover away.
 |---|---|
 | Frontend | React 19, Vite 8, Tailwind CSS 3, Zustand, React Router 7 |
 | Backend | FastAPI, SQLAlchemy 2, SQLite |
-| Auth | JWT (python-jose), bcrypt (passlib), Google OAuth |
+| Auth | JWT (python-jose), bcrypt, Google OAuth |
 | Quran data | [Quran.com / QuranCDN API v4](https://api-docs.quran.com) |
 
 ## 📂 Project Structure
@@ -74,7 +74,6 @@ You'll need **Node 18+** and **Python 3.10+**.
 cd server
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-pip install "bcrypt==4.0.1"          # passlib needs bcrypt 4.x, not 5.x
 cp .env.example .env                 # then edit SECRET_KEY etc.
 uvicorn main:app --reload --port 8000
 ```
