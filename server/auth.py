@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -12,16 +12,24 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer = HTTPBearer(auto_error=False)
 
 
+# bcrypt operates on bytes and only considers the first 72 bytes; we truncate
+# explicitly (bcrypt 5.x raises on longer input instead of truncating).
+def _pw_bytes(password: str) -> bytes:
+    return password.encode("utf-8")[:72]
+
+
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(_pw_bytes(password), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(_pw_bytes(plain), hashed.encode("utf-8"))
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(user_id: int, email: str) -> str:
