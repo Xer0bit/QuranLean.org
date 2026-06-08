@@ -91,24 +91,37 @@ jobs:
           # 3. Warn if env is missing (never overwrite it from CI)
           [ -f .env ] || echo "::warning:: server/.env missing — create it from .env.example (see deploy/DEPLOY.md)"
 
-          # 4. Restart the service (root needs no sudo; others use it)
+          # 4. Restart the service (root needs no sudo; others use it).
+          # `systemctl cat` is a reliable presence check (exits 0 iff the unit
+          # exists) — list-unit-files|grep can false-negative in CI shells.
           SUDO=""; [ "$(id -u)" -eq 0 ] || SUDO="sudo"
-          if systemctl list-unit-files | grep -q quranlearn-api.service; then
+          if systemctl cat quranlearn-api.service >/dev/null 2>&1; then
             $SUDO systemctl restart quranlearn-api
             echo "Restarted quranlearn-api."
           else
             echo "::warning:: quranlearn-api.service not installed — run one-time setup in deploy/DEPLOY.md §C"
+            exit 0
           fi
-          REMOTE
 
-      - name: Smoke test
-        run: |
-          sleep 3
+          # 5. Verify health on the box (independent of DNS/TLS/security group).
           for i in 1 2 3 4 5; do
-            if curl -fsS https://api.quranlearn.org/health; then
-              echo "" && echo "✓ API healthy"
+            if curl -fsS --max-time 5 http://127.0.0.1:8000/health; then
+              echo "" && echo "✓ API healthy on server"
               exit 0
             fi
-            echo "waiting for API... ($i)"; sleep 3
+            echo "waiting for API... ($i)"; sleep 2
           done
-          echo "✗ /health did not respond"; exit 1
+          echo "::error::API did not become healthy on 127.0.0.1:8000"
+          $SUDO journalctl -u quranlearn-api --no-pager -n 20 || true
+          exit 1
+          REMOTE
+
+      - name: Public endpoint check (informational)
+        if: always()
+        run: |
+          # Only meaningful once DNS + TLS + security-group port 443 are live.
+          if curl -fsS --max-time 8 https://api.quranlearn.org/health; then
+            echo "" && echo "✓ Public API reachable at https://api.quranlearn.org"
+          else
+            echo "::warning::https://api.quranlearn.org not reachable yet — pending DNS / TLS / security-group (see deploy/DEPLOY.md). The on-server health check above is authoritative."
+          fi
