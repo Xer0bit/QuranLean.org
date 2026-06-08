@@ -16,9 +16,25 @@ app = FastAPI(title="Tarteel Type API", version="1.0.0")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+# Origins allowed to call the API. FRONTEND_URL covers the deployment;
+# the localhost entries keep local dev working, and the production domains
+# are listed explicitly so it works even if FRONTEND_URL is misconfigured.
+# Set extra origins via the comma-separated EXTRA_CORS_ORIGINS env var.
+allowed_origins = [
+    FRONTEND_URL,
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:4173",
+    "https://quranlearn.org",
+    "https://www.quranlearn.org",
+]
+allowed_origins += [
+    o.strip() for o in os.getenv("EXTRA_CORS_ORIGINS", "").split(",") if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:5174", "http://localhost:4173"],
+    allow_origins=list(dict.fromkeys(allowed_origins)),  # de-dupe, keep order
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

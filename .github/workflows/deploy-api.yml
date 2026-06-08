@@ -1,0 +1,90 @@
+name: Deploy API
+
+# Deploys the FastAPI backend to the server behind api.quranlearn.org.
+# The frontend (quran-type/) deploys automatically via Vercel on push, so this
+# workflow only touches the server.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   SERVER_HOST        public IP or hostname of the server
+#   SERVER_USER        SSH user (e.g. ubuntu)
+#   SSH_PRIVATE_KEY    full contents of ignored/quran.pem (the private key)
+# Optional:
+#   SERVER_PORT        SSH port (defaults to 22)
+#   REMOTE_DIR         checkout path on the server (defaults to /home/<user>/LeanQuran.org)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'deploy/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:        # allow manual runs from the Actions tab
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${SERVER_PORT:-22}" -H "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+        env:
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+
+      - name: Deploy over SSH
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+        run: |
+          REMOTE_DIR="${REMOTE_DIR:-/home/${SERVER_USER}/LeanQuran.org}"
+          ssh -i ~/.ssh/deploy_key -p "${SERVER_PORT:-22}" \
+            "${SERVER_USER}@${SERVER_HOST}" \
+            "REMOTE_DIR='${REMOTE_DIR}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          # 1. Update the code
+          if [ ! -d "${REMOTE_DIR}/.git" ]; then
+            git clone https://github.com/Xer0bit/LeanQuran.org.git "${REMOTE_DIR}"
+          fi
+          cd "${REMOTE_DIR}"
+          git fetch origin main
+          git reset --hard origin/main
+
+          # 2. Backend dependencies
+          cd "${REMOTE_DIR}/server"
+          [ -d venv ] || python3 -m venv venv
+          ./venv/bin/pip install --upgrade pip --quiet
+          ./venv/bin/pip install -r requirements.txt --quiet
+          ./venv/bin/pip install "bcrypt==4.0.1" --quiet
+
+          # 3. Warn if env is missing (never overwrite it from CI)
+          [ -f .env ] || echo "::warning:: server/.env missing — create it from .env.example (see deploy/DEPLOY.md)"
+
+          # 4. Restart the service
+          if systemctl list-unit-files | grep -q quranlearn-api.service; then
+            sudo systemctl restart quranlearn-api
+          else
+            echo "::warning:: quranlearn-api.service not installed — run one-time setup in deploy/DEPLOY.md §C"
+          fi
+          REMOTE
+
+      - name: Smoke test
+        run: |
+          sleep 3
+          for i in 1 2 3 4 5; do
+            if curl -fsS https://api.quranlearn.org/health; then
+              echo "" && echo "✓ API healthy"
+              exit 0
+            fi
+            echo "waiting for API... ($i)"; sleep 3
+          done
+          echo "✗ /health did not respond"; exit 1
